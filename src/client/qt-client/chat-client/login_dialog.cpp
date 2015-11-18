@@ -27,31 +27,10 @@ LoginDialog::~LoginDialog() {
 }
 
 void LoginDialog::login_btn_clicked() {
-    auto nickname = ui->nickname_edit->text().toStdString();
-    auto ip = ui->ip_edit->text().toStdString();
+    auto nickname = ui->nickname_edit->text();
+    auto ip = ui->ip_edit->text();
     auto port = ui->port_edit->text().toInt();
 
-    Server *remote = new Server(nickname, ip, port);
-    auto connect_result = remote->connect();
-    if (connect_result == Server::SUCCESS) {
-        emit connected_to_server(remote);
-        close();
-    } else {
-        switch (connect_result) {
-        case Server::SOCKET_ERROR:
-            QMessageBox::critical(this, "Error", "Socket error.");
-            break;
-        case Server::ADDRESS_ERROR:
-             QMessageBox::critical(this, "Error", "Incorrect address.");
-            break;
-        case Server::CONNECTION_ERROR: {
-             auto msg = QString("%1:%2 is inaccessible.").arg(ip.c_str()).arg(port);
-             QMessageBox::critical(this, "Error", msg.toStdString().c_str());
-             break;
-        }
-        default:
-            QMessageBox::critical(this, "Error", "Unknow error.");
-            break;
-        }
-    }
+    emit recieved_credentials(nickname, ip, port);
+    close();
 }

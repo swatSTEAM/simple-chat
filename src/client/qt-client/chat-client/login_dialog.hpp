@@ -2,14 +2,12 @@
 #define LOGIN_DIALOG_HPP
 
 #include <QDialog>
-#include "remote_server.hpp"
 
 namespace Ui {
-class LoginDialog;
+    class LoginDialog;
 }
 
-class LoginDialog : public QDialog
-{
+class LoginDialog : public QDialog {
     Q_OBJECT
 
 public:
@@ -17,10 +15,11 @@ public:
     ~LoginDialog();
 
 signals:
-    void connected_to_server(Server*);
+    void recieved_credentials(QString&, QString&, int);
 
 private slots:
     void login_btn_clicked();
+
 private:
     Ui::LoginDialog *ui;
 };

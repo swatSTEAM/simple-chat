@@ -144,12 +144,12 @@
     <rect>
      <x>200</x>
      <y>140</y>
-     <width>76</width>
+     <width>81</width>
      <height>32</height>
     </rect>
    </property>
    <property name="text">
-    <string>Login</string>
+    <string>Connect</string>
    </property>
   </widget>
  </widget>

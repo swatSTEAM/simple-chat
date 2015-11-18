@@ -4,9 +4,8 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
-CONFIG += C++11
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT       += core gui widgets network
+CONFIG   += C++11
 
 TARGET = Simple-Chat
 TEMPLATE = app

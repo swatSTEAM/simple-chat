@@ -17,13 +17,15 @@ public:
     ~MainWindow();
 
 private slots:
+    void connection_established();
     void action_connect_triggered();
     void action_disconnect_triggered();
-    void establish_connection(Server*);
+    void establish_connection(QString&, QString&, int);
+    void connection_fails(QAbstractSocket::SocketError);
+
 private:
     Ui::MainWindow *ui;
     std::unique_ptr<Server> remote_server = nullptr;
-
 };
 
 #endif // MAIN_WINDOW_HPP

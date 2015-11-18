@@ -1,11 +1,5 @@
-#ifndef CLIENT_HPP
-#define CLIENT_HPP
-
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <netinet/in.h>
+#ifndef SERVER_HPP
+#define SERVER_HPP
 
 #include <iostream>
 #include <string>
@@ -13,26 +7,35 @@
 
 #include <QDebug>
 #include <QMessageBox>
+#include <QTcpSocket>
 
-class Server {
+class Server : public QObject {
+    Q_OBJECT
 public:
-    static constexpr int SUCCESS = 0;
-    static constexpr int SOCKET_ERROR = 1;
-    static constexpr int CONNECTION_ERROR = 2;
-    static constexpr int ADDRESS_ERROR = 3;
-
-    typedef std::unique_ptr<Server> server_ptr;
     Server() = delete;
-    Server(std::string, std::string, int);
-    int connect();
+    Server(QString, QString, int);
+    ~Server();
+    Server(const Server&) = delete;
+
+    void establish_connection();
     void disconnect();
-    std::string get_address();
+    QString get_address();
+    const std::unique_ptr<QTcpSocket>& get_client_socket();
+
+signals:
+    void socket_fails(QAbstractSocket::SocketError);
+    void socket_connected();
+
+private slots:
+    void socket_ready_read();
+
 
 private:
-    std::string nickname;
-    std::string ip;
+
+    QString nickname;
+    QString ip;
     int port;
-    int client_socket = 0;
+    std::unique_ptr<QTcpSocket> client_socket = nullptr;
 };
 
-#endif // CLIENT_HPP
+#endif // SERVER_HPP

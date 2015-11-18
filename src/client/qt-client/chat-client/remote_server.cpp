@@ -1,44 +1,50 @@
 #include "remote_server.hpp"
 
+#include <QDebug>
+#include <QMessageBox>
 
-Server::Server(std::string _nickname, std::string _ip, int _port) {
-    nickname = _nickname;
-    ip = _ip;
-    port = _port;
+Server::Server(QString _nickname, QString _ip, int _port)
+    : nickname(_nickname), ip(_ip), port(_port) { }
+
+Server::~Server() {
+//    delete client_socket;
 }
 
-int Server::connect() {
-    client_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (client_socket < 1) {
-        client_socket = 0;
-        return SOCKET_ERROR;
-    }
+void Server::establish_connection() {
+    client_socket = std::move(
+                std::unique_ptr<QTcpSocket>(new QTcpSocket));
 
-    sockaddr_in server;
-    bzero(&server, sizeof(server));
-    server.sin_family = AF_INET;
-    server.sin_port = htons(port);
-    if (inet_aton(ip.c_str(), &(server.sin_addr)) < 1) {
-        client_socket = 0;
-        return ADDRESS_ERROR;
-    }
+//    client_socket->connectToHost(ip, port);
+    if (client_socket->waitForConnected(1))
+        qDebug("Connected!");
 
-    if (::connect(client_socket, (sockaddr *) (&server), sizeof(server)) != 0) {
-        close(client_socket);
-        client_socket = 0;
-        return CONNECTION_ERROR;
-    }
+    connect(client_socket.get(), SIGNAL(connected()), SIGNAL(socket_connected()));
 
-    return SUCCESS;
+    connect(client_socket.get(), SIGNAL(readyRead()), SLOT(socket_ready_read()));
+
+    connect(client_socket.get(), SIGNAL(error(QAbstractSocket::SocketError)),
+            SIGNAL(socket_fails(QAbstractSocket::SocketError)));
+
+
 }
 
 void Server::disconnect() {
-    if (client_socket != 0) {
-        close(client_socket);
-        client_socket = 0;
+    if (client_socket != nullptr) {
+//        close(client_socket);
+        client_socket = nullptr;
     }
 }
 
-std::string Server::get_address() {
-    return ip + ":" + std::to_string(port);
+QString Server::get_address() {
+    return ip + ":" + QString::number(port);
 }
+
+const std::unique_ptr<QTcpSocket>& Server::get_client_socket() {
+    return client_socket;
+}
+
+void Server::socket_ready_read()
+{
+
+}
+
