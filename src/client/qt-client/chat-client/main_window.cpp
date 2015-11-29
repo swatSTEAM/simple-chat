@@ -14,8 +14,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->actionDisconnect, SIGNAL(triggered()),
             SLOT(action_disconnect_triggered()));
-
-    qRegisterMetaType<QAbstractSocket::SocketError>();
 }
 
 void MainWindow::action_connect_triggered() {
