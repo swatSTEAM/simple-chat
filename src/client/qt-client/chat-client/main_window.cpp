@@ -1,8 +1,7 @@
-#include "main_window.hpp"
 #include "ui_main_window.h"
+
+#include "main_window.hpp"
 #include "login_dialog.hpp"
-#include <QDebug>
-#include <QString>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -10,67 +9,65 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    connect(ui->actionConnect, SIGNAL(triggered()),
+            SLOT(action_connect_triggered()));
 
-    connect(ui->actionConnect, SIGNAL(triggered()), SLOT(action_connect_triggered()));
-    connect(ui->actionDisconnect, SIGNAL(triggered()), SLOT(action_disconnect_triggered()));
+    connect(ui->actionDisconnect, SIGNAL(triggered()),
+            SLOT(action_disconnect_triggered()));
+
+    qRegisterMetaType<QAbstractSocket::SocketError>();
 }
 
 void MainWindow::action_connect_triggered() {
     auto login_dialog = new LoginDialog(this);
-    connect(login_dialog, SIGNAL(recieved_credentials(QString&, QString&, int)),
-            SLOT(establish_connection(QString&, QString&, int)));
+    connect(login_dialog, SIGNAL(recieved_credentials(const std::string&,
+                                                      const std::string&, int)),
+            SLOT(establish_connection(const std::string&,
+                                      const std::string&, int)));
 
     login_dialog->setModal(true);
     login_dialog->show();
 }
 
-void MainWindow::establish_connection(QString& nickname, QString& ip, int port) {
-    remote_server = std::move(
-                std::unique_ptr<Server>(new Server(nickname, ip, port)));
+void MainWindow::establish_connection(const std::string& nickname,
+                                      const std::string& ip, int port)
+{
 
-    connect(remote_server.get(), SIGNAL(socket_fails(QAbstractSocket::SocketError)),
-            this, SLOT(connection_fails(QAbstractSocket::SocketError)));
+    remote_server = new Server(nickname, ip, port);
 
-    connect(remote_server.get(), SIGNAL(socket_connected()),
-                this, SLOT(connection_established()));
+    connect(remote_server, SIGNAL(connected()), SLOT(connection_established()));
+    connect(remote_server, SIGNAL(error()), SLOT(connection_failed()));
 
-    remote_server->establish_connection();
-    statusBar()->showMessage("Trying connect to " +
-                             remote_server->get_address(), 30000);
+    auto thread = new QThread(this);
+    remote_server->moveToThread(thread);
+
+    connect(thread, SIGNAL(started()), remote_server, SLOT(establish_connection()));
+    connect(remote_server, SIGNAL(stop_thread()), thread, SLOT(quit()));
+
+    thread->start();
 }
 
-void MainWindow::connection_fails(QAbstractSocket::SocketError e) {
-    QString error_msg = "Error: " +
-        (e == QAbstractSocket::HostNotFoundError ?
-        "The host was not found." :
-         e == QAbstractSocket::RemoteHostClosedError ?
-        "The remote host is closed." :
-         e == QAbstractSocket::ConnectionRefusedError ?
-        "The connection was refused." :
-         QString(remote_server->get_client_socket()->errorString())
-    );
-    QMessageBox::critical(this, "Error", error_msg);
+void MainWindow::connection_failed() {
+    delete remote_server;
+    remote_server = nullptr;
+    qDebug() << "Connection failed";
 }
 
 void MainWindow::action_disconnect_triggered() {
-//    if (remote_server == nullptr) {
-//        return;
-//}
-
-//    remote_server->disconnect();
-//    auto msg = remote_server->get_address();
-//    statusBar()->showMessage("Disconnected from " + msg, 2000);
-//    remote_server = nullptr;
-}
-
-MainWindow::~MainWindow() {
-    if (remote_server != nullptr) {
-        remote_server->disconnect();
+    if (remote_server == nullptr) {
+        return;
     }
-    delete ui;
+    remote_server->disconnect();
+    remote_server = nullptr;
+    qDebug() << "Disconnected from server";
 }
 
 void MainWindow::connection_established() {
-    statusBar()->showMessage("Connected to " +
-                             remote_server->get_address(), 3000);
+    qDebug() << "Connected successfully";
+}
+
+
+MainWindow::~MainWindow() {
+    delete remote_server;
+    delete ui;
 }

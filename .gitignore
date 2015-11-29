@@ -1,4 +1,7 @@
-src/client/qt-client/build-chat-client-Desktop_Qt_5_5_0_clang_64bit-Debug
+src/client/qt-client/*
+!src/client/qt-client/chat-client/
+
+
 # C/C++ BELOW:
 # Compiled Object files
 *.slo
@@ -47,3 +50,23 @@ src/client/qt-client/build-chat-client-Desktop_Qt_5_5_0_clang_64bit-Debug
 # mpeltonen/sbt-idea plugin
 .idea_modules/
 
+/.qmake.cache
+/.qmake.stash
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.moc
+moc_*.cpp
+qrc_*.cpp
+ui_*.h
+Makefile*
+*-build-*
+
+# QtCreator
+
+*.autosave
+
+#QtCtreator Qml
+*.qmlproject.user
+*.qmlproject.user.*

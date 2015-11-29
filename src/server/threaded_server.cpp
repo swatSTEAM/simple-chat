@@ -21,17 +21,17 @@ void ThreadedServer::serve_forever() {
     /*!
      * @brief Main server loop.
      *
-     * In endless loop the #server_socket tries to accept new connections. If accept is OK,
+     * In endless loop the #master_socket tries to accept new connections. If accept is OK,
      * creates new user and handles him in separate deamon threads.
      */
 
     struct sockaddr_in client_addr;
     socklen_t len = sizeof(client_addr);
     while(true) {
-        sockfd_t client_sock = accept(server_socket, (sockaddr *) &client_addr, &len);
+        sockfd_t client_sock = accept(master_socket, (sockaddr *) &client_addr, &len);
         if (client_sock == -1) {
             // TODO
-            std::cerr << "accept error\n";
+            std::cout << strerror(errno) << std::endl;
             exit(1);
         }
         std::cout << "new connection" << std::endl;

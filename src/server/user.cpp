@@ -56,7 +56,7 @@ ssize_t User::send_message(const std::string msg_string) const {
      * On error, -1
      */
 
-    return send(user_socket, msg_string.c_str(), msg_string.size(), 0);
+    return send(user_socket, msg_string.c_str(), msg_string.size(), MSG_NOSIGNAL);
 }
 
 ssize_t User::read_message() {
@@ -66,7 +66,8 @@ ssize_t User::read_message() {
      * On error, -1
      */
 
-    ssize_t chars_recvd = recv(user_socket, inner_buffer.data(), buffer_size - 1, 0);
+    ssize_t chars_recvd = recv(user_socket, inner_buffer.data(),
+                               buffer_size - 1, MSG_NOSIGNAL);
     if (chars_recvd > -1) {
         inner_buffer[chars_recvd] = '\0';
     }

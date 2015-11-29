@@ -1,50 +1,50 @@
 #include "remote_server.hpp"
 
-#include <QDebug>
-#include <QMessageBox>
-
-Server::Server(QString _nickname, QString _ip, int _port)
+Server::Server(std::string _nickname, std::string _ip, int _port)
     : nickname(_nickname), ip(_ip), port(_port) { }
 
 Server::~Server() {
-//    delete client_socket;
+
 }
 
 void Server::establish_connection() {
-    client_socket = std::move(
-                std::unique_ptr<QTcpSocket>(new QTcpSocket));
+    disconnect();
 
-//    client_socket->connectToHost(ip, port);
-    if (client_socket->waitForConnected(1))
-        qDebug("Connected!");
+    master_socket = std::move(
+                std::unique_ptr<QTcpSocket>(new QTcpSocket(nullptr))
+                );
 
-    connect(client_socket.get(), SIGNAL(connected()), SIGNAL(socket_connected()));
+    connect(master_socket.get(), SIGNAL(connected()),
+            SIGNAL(connected()), Qt::DirectConnection);
 
-    connect(client_socket.get(), SIGNAL(readyRead()), SLOT(socket_ready_read()));
+    connect(master_socket.get(), SIGNAL(readyRead()),
+            SIGNAL(readyRead()), Qt::DirectConnection);
 
-    connect(client_socket.get(), SIGNAL(error(QAbstractSocket::SocketError)),
-            SIGNAL(socket_fails(QAbstractSocket::SocketError)));
+    // Qt signal doesn't work properly. Sometimes it simply doesn't emit error.
+    // If you know how to tackle with it please share your ideas here:
+    // http://stackoverflow.com/questions/33977234/qtcpsocket-does-not-emit-error-signal
+    // Due to this trouble I check socket state and emit signal manually if error occurs.
 
+    //    connect(master_socket.get(), SIGNAL(error(QAbstractSocket::SocketError)),
+    //            SIGNAL(error(QAbstractSocket::SocketError)), Qt::DirectConnection);
 
+    master_socket->connectToHost(ip.c_str(), port);
+    master_socket->waitForConnected(timeout*1000);
+
+    if (master_socket->state() == QAbstractSocket::UnconnectedState) {
+        disconnect();
+        emit error();
+    }
+
+    emit stop_thread();
 }
 
 void Server::disconnect() {
-    if (client_socket != nullptr) {
-//        close(client_socket);
-        client_socket = nullptr;
+    if (master_socket) {
+        master_socket->disconnectFromHost();
     }
 }
 
 QString Server::get_address() {
-    return ip + ":" + QString::number(port);
+    return QString::fromStdString(ip) + ":" + QString::number(port);
 }
-
-const std::unique_ptr<QTcpSocket>& Server::get_client_socket() {
-    return client_socket;
-}
-
-void Server::socket_ready_read()
-{
-
-}
-

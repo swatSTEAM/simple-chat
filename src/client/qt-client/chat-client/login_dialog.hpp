@@ -15,7 +15,8 @@ public:
     ~LoginDialog();
 
 signals:
-    void recieved_credentials(QString&, QString&, int);
+    void recieved_credentials(const std::string&,
+                              const std::string&, int);
 
 private slots:
     void login_btn_clicked();

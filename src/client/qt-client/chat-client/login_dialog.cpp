@@ -27,8 +27,8 @@ LoginDialog::~LoginDialog() {
 }
 
 void LoginDialog::login_btn_clicked() {
-    auto nickname = ui->nickname_edit->text();
-    auto ip = ui->ip_edit->text();
+    auto nickname = ui->nickname_edit->text().toStdString();
+    auto ip = ui->ip_edit->text().toStdString();
     auto port = ui->port_edit->text().toInt();
 
     emit recieved_credentials(nickname, ip, port);

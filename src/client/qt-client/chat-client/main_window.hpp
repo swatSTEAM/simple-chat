@@ -2,7 +2,7 @@
 #define MAIN_WINDOW_HPP
 
 #include <QMainWindow>
-#include <memory>
+#include <QThread>
 #include "remote_server.hpp"
 
 namespace Ui {
@@ -18,14 +18,17 @@ public:
 
 private slots:
     void connection_established();
+    void connection_failed();
     void action_connect_triggered();
     void action_disconnect_triggered();
-    void establish_connection(QString&, QString&, int);
-    void connection_fails(QAbstractSocket::SocketError);
+
+
+    void establish_connection(const std::string&,
+                              const std::string&, int);
 
 private:
     Ui::MainWindow *ui;
-    std::unique_ptr<Server> remote_server = nullptr;
+    Server *remote_server = nullptr;
 };
 
 #endif // MAIN_WINDOW_HPP

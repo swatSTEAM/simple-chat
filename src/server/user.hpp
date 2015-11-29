@@ -1,6 +1,10 @@
 #ifndef SERVER_CPP_USER_HPP
 #define SERVER_CPP_USER_HPP
 
+#ifdef __APPLE__
+    #define MSG_NOSIGNAL 0x4000
+#endif
+
 #include <array>
 #include <iostream>
 #include <string>
@@ -9,6 +13,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "../rapidjson/document.h"
 #include "../rapidjson/stringbuffer.h"

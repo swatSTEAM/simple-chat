@@ -3,12 +3,15 @@
 
 #include <iostream>
 #include <string>
+#include <cerrno>
 
 #include <strings.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 
 typedef int sockfd_t;
 
@@ -34,20 +37,21 @@ public:
 
 protected:
     int port;
-    sockfd_t server_socket;
+    sockfd_t master_socket;
     int socket_type = SOCK_STREAM;
-    int request_queue_size = 5;
+    int request_queue_size = SOMAXCONN;
     bool allow_reuse_address = true;
     sa_family_t address_family = AF_INET;
     sockaddr_in socket_address;
 
 
     static constexpr size_t BUFFER_SIZE = 4096;
-    ///< Length of bytes that #server_socket accepts at a time.
+    ///< Length of bytes that #master_socket accepts at a time.
 
     virtual void server_init();
     virtual void server_bind();
     virtual void server_activate();
+    virtual int  set_nonblock(sockfd_t);
 };
 
 #endif //BASE_SERVER_HPP

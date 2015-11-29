@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui widgets network
+
 CONFIG   += C++11
 
 TARGET = Simple-Chat

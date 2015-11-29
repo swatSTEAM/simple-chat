@@ -1,5 +1,5 @@
-#CC=/usr/bin/g++
-CC=/usr/local/bin/g++-4.9
+CC=/usr/bin/g++
+#CC=/usr/local/bin/g++-4.9
 
 RAPIDJSON=-Isrc/rapidjson
 

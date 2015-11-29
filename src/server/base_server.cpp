@@ -19,25 +19,30 @@ void BaseServer::server_init() {
      * If #allow_reuse_address is true makes socket reusable.
      */
 
-    if ((server_socket = socket(address_family, socket_type, 0)) == -1) {
+    if ((master_socket = socket(address_family,
+                                socket_type, IPPROTO_TCP)) == -1)
+    {
         // TODO
-        std::cerr << "socket creating error\n";
+        std::cout << strerror(errno) << std::endl;
         exit(1);
     }
 
     if (allow_reuse_address) {
         int yes = 1;
-        if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
+        if (setsockopt(master_socket, SOL_SOCKET, SO_REUSEADDR,
+                       &yes, sizeof(yes)) == -1)
+        {
             // TODO
-            std::cerr << "set SO_REUSEADDR error\n";
+            std::cout << strerror(errno) << std::endl;
             exit(1);
         }
     }
+//    set_nonblock(master_socket);
 }
 
 void BaseServer::server_bind() {
     /*!
-     * @brief Binds #server_socket with server #port and local address.
+     * @brief Binds #master_socket with server #port and local address.
      */
 
     bzero(&socket_address, sizeof(socket_address));
@@ -45,21 +50,23 @@ void BaseServer::server_bind() {
     socket_address.sin_port = htons(port);
     socket_address.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    if (bind(server_socket, (sockaddr *) &socket_address, sizeof(socket_address)) < 0) {
+    if (bind(master_socket, (sockaddr *)
+            &socket_address, sizeof(socket_address)) < 0)
+    {
         // TODO
-        std::cerr << "socket bind error\n";
+        std::cout << strerror(errno) << std::endl;
         exit(1);
     }
 }
 
 void BaseServer::server_activate() {
     /*!
-     * @brief Makes #server_socket listening.
+     * @brief Makes #master_socket listening.
      */
 
-    if (listen(server_socket, request_queue_size) < 0) {
+    if (listen(master_socket, request_queue_size) < 0) {
         // TODO
-        std::cerr << "listen error\n";
+        std::cout << strerror(errno) << std::endl;
         exit(1);
     }
 }
@@ -89,12 +96,13 @@ int BaseServer::get_port() const {
 
 void BaseServer::stop_server() {
     /*!
-     * @brief In #BaseServer closes #server_socket.
+     * @brief In #BaseServer closes #master_socket.
      */
 
-    if (server_socket != -1) {
-        close(server_socket);
-        server_socket = -1;
+    if (master_socket != -1) {
+        shutdown(master_socket, SHUT_RDWR);
+        close(master_socket);
+        master_socket = -1;
     }
 }
 
@@ -104,4 +112,20 @@ std::string BaseServer::get_address() const {
      */
 
     return std::string(get_ip() + ":" + std::to_string(get_port()));
+}
+
+int BaseServer::set_nonblock(sockfd_t sock) {
+    /*!
+     * @brief Puts socket in non-blocking mode
+     */
+
+    int flags;
+    #if defined(O_NONBLOCK)
+        if (-1 == (flags = fcntl(sock, F_GETFL, 0)))
+		    flags = 0;
+	    return fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+    #else
+        flags = 1;
+        return ioctl(sock, FIOBIO, &flags);
+    #endif
 }
