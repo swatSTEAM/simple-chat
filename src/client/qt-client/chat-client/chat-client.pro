@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui widgets network
+QT       += core gui widgets network declarative
 
 CONFIG   += C++11
 
@@ -12,13 +12,15 @@ TARGET = Simple-Chat
 TEMPLATE = app
 
 SOURCES +=  main.cpp\
-            main_window.cpp \
-            login_dialog.cpp \
-            remote_server.cpp
+            remote_server.cpp \
+    chat_core.cpp
 
-HEADERS  += main_window.hpp \
-            login_dialog.hpp \
-            remote_server.hpp
+QT += qml quick widgets
+RESOURCES += qml.qrc
+include(deployment.pri)
 
-FORMS    += main_window.ui \
-            login_dialog.ui
+HEADERS  += \
+            remote_server.hpp \
+    chat_core.hpp
+
+FORMS    +=

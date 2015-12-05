@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>SweetButt.qml</file>
+        <file>LoginGroup.qml</file>
+        <file>ChatModel.qml</file>
+        <file>FontAwesome.qml</file>
+        <file>controls/Variables.qml</file>
+        <file>resource/icon/font-awesome-qml.icns</file>
+        <file>resource/fontawesome-webfont.ttf</file>
+        <file>controls/Loader.qml</file>
+        <file>BarButt.qml</file>
+    </qresource>
+</RCC>

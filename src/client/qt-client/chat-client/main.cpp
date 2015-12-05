@@ -1,12 +1,29 @@
-#include "main_window.hpp"
 #include <QApplication>
+#include <QQmlApplicationEngine>
+#include <chat_core.hpp>
+#include <QQmlContext>
+#include <QRegExpValidator>
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
+    QApplication app(argc, argv);
 
-    MainWindow w;
-    w.show();
+    QQmlApplicationEngine engine;
+    ChatCore core;
+    QQmlContext* uiCtx = engine.rootContext();
+    uiCtx->setContextProperty("core", &core);
 
-    return a.exec();
+    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+    auto uiCore = engine.rootObjects().takeFirst();
+
+    QObject::connect(uiCore, SIGNAL(loginSignal(QString, QString, QString)),
+                     &core, SLOT(tryconnect(QString, QString, QString)));
+    QObject::connect(uiCore, SIGNAL(disconnectSignal()),
+                     &core, SLOT(disconnect()));
+//    QObject::connect(&core, SIGNAL(failed(QString, int)),
+//                     engine.rootObjects().takeFirst(), SLOT(showErr(QString, int)));
+
+
+//    QApplication::quit();
+    return app.exec();
 }
