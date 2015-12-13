@@ -87,7 +87,6 @@ void ChatCore::send_mess(QString user, QString mess)
     auto msg = "{\"method\": \"send_to_user\", \"user\": \"" +
                    user + "\", " +
                    "\"msg\": \""  + mess + "\"}";
-    qDebug() << (msg);
     server->send(msg);
 }
 

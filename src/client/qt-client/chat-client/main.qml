@@ -15,9 +15,10 @@ ApplicationWindow {
     property int _buttonSize: 30//mainWindow.height/24
     property int _interval: 10//mainWindow.height/95
     property int userIndex: 0
-    property string mateName: "ERROR"
-    property string me: "ERROR"
+    property string mateName: ""
+    property string me: ""
     property var usersData: [[]]
+    property string lastWarnUser: ""
     property variant clickPos: "1,1"
 
     signal loginSignal(string nickname, string ip, string port)
@@ -57,7 +58,7 @@ ApplicationWindow {
             usersData = [];
             userModel.clear();
             for(var i = 0; i < data['online_users'].length; i++) {
-                userModel.append({name: data['online_users'][i]});
+                userModel.append({name: data['online_users'][i], messNum: 0});
                 usersData.push(createModel());
             }
             headText.text = "Users";
@@ -65,22 +66,28 @@ ApplicationWindow {
         }
 
         onUserConnected: {
-            userModel.append({name: mess});
+            userModel.append({name: mess, messNum: 0});
             usersData.push(createModel());
         }
         onUserDisconnected: {
             for(var i = 0; i < userModel.count; i++) {
                 if (userModel.get(i).name == mess) {
                     userModel.remove(i);
+                    usersData[i].destroy();
                     usersData.splice(i,i+1);
                 }
             }
         }
         onNewMess: {
-            console.log("New mess from " + user + " :" + mess);
             for(var i = 0; i < userModel.count; i++) {
                 if (userModel.get(i).name == user) {
                     usersData[i].append({userFrom: user, date: Qt.formatDateTime(new Date(), "ddd hh:mm:ss"), content: mess});
+                    if (user!=mateName) {
+                        userModel.get(i).messNum += 1;
+                        warns.text = "New message from " + user;
+                        lastWarnUser = user;
+                        animateColor.start();
+                    }
                     break;
                 }
             }
@@ -94,6 +101,18 @@ ApplicationWindow {
         headText.text = "Chat";
         head.visible = true;
         loginGroup.visible = true;
+    }
+
+
+    Timer {
+        id: timer
+    }
+
+    function delay(delayTime, cb) {
+        timer.interval = delayTime;
+        timer.repeat = false;
+        timer.triggered.connect(cb);
+        timer.start();
     }
 
     Component {
@@ -125,6 +144,26 @@ ApplicationWindow {
         }
         alwaysRunToEnd: true
         loops: Animation.Infinite
+   }
+
+    SequentialAnimation {
+        id: animateColor
+        ColorAnimation {
+            properties: "color"
+            from: _backColor
+            to: Qt.darker(_backColor)
+            duration: 500
+            target: warnsBack
+        }
+        ColorAnimation {
+            properties: "color"
+            from: Qt.darker(_backColor)
+            to: _backColor
+            duration: 500
+            target: warnsBack
+        }
+//        alwaysRunToEnd: true
+//        loops: Animation.Infinite
    }
 
     Item {
@@ -175,10 +214,11 @@ ApplicationWindow {
                     height: _buttonSize
                     color: ListView.isCurrentItem ? _backColor : "#00000000"
                     Text {
+                        id: usertext
                         width: parent.width
                         color: wrapper.ListView.isCurrentItem ? _textColor : _backColor
                         height: _buttonSize
-                        text: name
+                        text: name + (messNum ? " (" + messNum + ")" : "")
                         font.pixelSize: _buttonSize*(3/4) - 3
                         verticalAlignment: Text.AlignVCenter
                         horizontalAlignment: Text.AlignHCenter
@@ -187,18 +227,25 @@ ApplicationWindow {
                         anchors.fill: parent
                         onClicked: users.currentIndex = index
                         onDoubleClicked: {
-                            users.visible = false;
-                            mateName = name;
-                            chatList.visible = true;
-                            head.visible = false;
+                            if (name!=me) {
+                                users.visible = false;
+                                mateName = name;
+                                chatList.visible = true;
+                                head.visible = false;
 
-                            for(var i = 0; i < userModel.count; i++) {
-                                if (userModel.get(i).name == mateName) {
-                                    userIndex = i;
-                                    chatView.model = usersData[userIndex];
-                                    console.log("SELECT MATE: " + mateName);
-                                    break;
+                                for(var i = 0; i < userModel.count; i++) {
+                                    if (userModel.get(i).name == mateName) {
+                                        userModel.get(i).messNum = 0;
+                                        userIndex = i;
+                                        chatView.model = usersData[userIndex];
+                                        console.log("SELECT MATE: " + mateName);
+                                        break;
+                                    }
                                 }
+                                if (name==lastWarnUser) warns.text = "";
+                            } else {
+                                usertext.text = "You can't select youself";
+                                delay(2000, function () {usertext.text = me})
                             }
                         }
                     }
@@ -303,10 +350,11 @@ ApplicationWindow {
                 text: awesome.icons.fa_paper_plane_o
                 tooltip: "Send"
                 onClicked: {
-                    if (/\S/.test(inputMess.text) !== "") {
+                    if (/\S/.test(inputMess.text) != "") {
                         usersData[userIndex].append({userFrom: me, date: Qt.formatDateTime(new Date(), "ddd hh:mm:ss"), content: inputMess.text});
                         sendMessSignal(mateName, inputMess.text);
                         chatView.currentIndex = chatView.count - 1;
+                        inputMess.text = "";
                     }
                 }
             }
@@ -357,6 +405,7 @@ ApplicationWindow {
                         chatList.visible = false;
                         head.visible = true;
                         users.visible = true;
+                        mateName = "";
                     }
                 }
             }
@@ -372,12 +421,15 @@ ApplicationWindow {
                     if (!loginGroup.visible) {
                         disconnectSignal();
                         disconnectUI();
+                        lastWarnUser = "";
+                        mateName = "";
                     }
                 }
             }
         }
 
         Rectangle {
+            id: warnsBack
             width: disconnect.x
             height: _buttonSize
             color: _backColor

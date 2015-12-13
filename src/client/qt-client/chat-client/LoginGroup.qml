@@ -120,18 +120,6 @@ Item {
     }
 
 
-    Timer {
-        id: timer
-    }
-
-    function delay(delayTime, cb) {
-        timer.interval = delayTime;
-        timer.repeat = false;
-        timer.triggered.connect(cb);
-        timer.start();
-    }
-
-
     function connect() {
 
         loginSignal(nickInput.text, ipInput.text, portInput.text)
