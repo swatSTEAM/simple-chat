@@ -8,21 +8,21 @@ import QtGraphicalEffects 1.0
 
 ApplicationWindow {
 
-    property var _themes: ["#e62020","#1E90FF", "#FF5800", "#4F7942","#116062"]
+    property var _themes: ["#e62020","#1E90FF", "#FF5800", "#4F7942", "#116062"]
     property int _index: 0
     property color _backColor: _themes[_index]
     property color _textColor: "#f6f4f2"
     property int _buttonSize: 30//mainWindow.height/24
     property int _interval: 10//mainWindow.height/95
-
+    property int userIndex: 0
     property string mateName: "ERROR"
     property string me: "ERROR"
+    property var usersData: [[]]
     property variant clickPos: "1,1"
 
     signal loginSignal(string nickname, string ip, string port)
     signal disconnectSignal()
-    signal sendMessSignal(string mess)
-    signal selectUser(string mess)
+    signal sendMessSignal(string user, string mess)
 
     flags: Qt.FramelessWindowHint
     visible: true
@@ -35,22 +35,57 @@ ApplicationWindow {
     Connections {
         target: core
         onFailed: {
-            warns.text = mess;
+            warns.text = "Connection failed";
             animateOpacity.stop();
-//            headText.text = "Users";
-//            users.visible = true;
             disconnectUI();
         }
+
         onDisconnected: {
-            warns.text = mess;
+            warns.text = "Disconnected";
+            animateOpacity.stop();
+            disconnectUI();
+        }
+
+        onConnected: {
+            warns.text = "Connected successful";
             animateOpacity.stop();
         }
-        onConnected: {
-            warns.text = mess;
-            animateOpacity.stop();
+
+        onOnlineUsers: {
+            console.log(messList);
+            var data = JSON.parse(messList);
+            usersData = [];
+            userModel.clear();
+            for(var i = 0; i < data['online_users'].length; i++) {
+                userModel.append({name: data['online_users'][i]});
+                usersData.push(createModel());
+            }
             headText.text = "Users";
             users.visible = true;
         }
+
+        onUserConnected: {
+            userModel.append({name: mess});
+            usersData.push(createModel());
+        }
+        onUserDisconnected: {
+            for(var i = 0; i < userModel.count; i++) {
+                if (userModel.get(i).name == mess) {
+                    userModel.remove(i);
+                    usersData.splice(i,i+1);
+                }
+            }
+        }
+        onNewMess: {
+            console.log("New mess from " + user + " :" + mess);
+            for(var i = 0; i < userModel.count; i++) {
+                if (userModel.get(i).name == user) {
+                    usersData[i].append({userFrom: user, date: Qt.formatDateTime(new Date(), "ddd hh:mm:ss"), content: mess});
+                    break;
+                }
+            }
+        }
+
     }
 
     function disconnectUI() {
@@ -59,6 +94,17 @@ ApplicationWindow {
         headText.text = "Chat";
         head.visible = true;
         loginGroup.visible = true;
+    }
+
+    Component {
+        id: dummy
+        ListModel {
+        }
+    }
+
+    function createModel() {
+        var newModel = dummy.createObject();
+        return newModel;
     }
 
     SequentialAnimation {
@@ -145,6 +191,15 @@ ApplicationWindow {
                             mateName = name;
                             chatList.visible = true;
                             head.visible = false;
+
+                            for(var i = 0; i < userModel.count; i++) {
+                                if (userModel.get(i).name == mateName) {
+                                    userIndex = i;
+                                    chatView.model = usersData[userIndex];
+                                    console.log("SELECT MATE: " + mateName);
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
@@ -152,18 +207,11 @@ ApplicationWindow {
             focus: true
             model: ListModel {
                 id: userModel
-                ListElement {
-                    name: "User1"
-                }
-
-                ListElement {
-                    name: "User2"
-                }
-
-                ListElement {
-                    name: "User3"
-                }
             }
+        }
+
+        ListModel {
+            id: chatModel
         }
 
         Item {
@@ -171,9 +219,63 @@ ApplicationWindow {
             id: chatList
             anchors.fill: parent
 
-            ChatModel {
+            ListView {
                 id: chatView
+                y: spacing+close.height
+                x: parent.x+10
+                width: mainWindow.width-2*10
+                height: inputMess.y-close.height-spacing*2
+                spacing: _buttonSize
+                delegate:
+                    Item {
+                        width: parent.width*0.75
+                        height: messText.height + _buttonSize
+                        Rectangle {
+                            x: userFrom == me ? chatView.width - width: 0
+                            id: wrap
+                            width: parent.width
+                            height: parent.height
+                            color: userFrom == me ? "#00000000" : _backColor
+                            border.color:  _backColor
+                            radius: Math.min(width*0.5, (parent.width-messText.width)/2)
+
+
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: chatView.currentIndex = index
+                            }
+                        }
+                        Text {
+                            id: messText
+                            color: userFrom == me ?_backColor : _textColor
+                            text: content
+                            font.pixelSize: _interval*2
+                            width: wrap.width-9*_interval
+                            anchors.horizontalCenterOffset: 0
+                            anchors.verticalCenterOffset: 0
+                            anchors.centerIn: wrap
+                            verticalAlignment: Text.AlignVCenter
+                            horizontalAlignment: Text.AlignHCenter
+                            wrapMode: Text.Wrap
+                        }
+                        Text {
+                            id: dateText
+                            color: _backColor
+                            text: userFrom + " " + date
+                            font.pixelSize: _interval*1.3
+                            width: parent.width
+            //                        anchors.centerIn: parent
+                            horizontalAlignment: Text.AlignHCenter
+                            anchors.horizontalCenter: wrap.horizontalCenter
+                            y: wrap.y+wrap.height
+            //                        wrapMode: Text.WordWrap
+                        }
+                     }
+
+                focus: true
+                model: chatModel
             }
+
 
             TextArea {
                 id: inputMess
@@ -202,7 +304,8 @@ ApplicationWindow {
                 tooltip: "Send"
                 onClicked: {
                     if (/\S/.test(inputMess.text) !== "") {
-                        chatView.model.append({user: me, date: Qt.formatDateTime(new Date(), "ddd hh:mm:ss"), content: inputMess.text});
+                        usersData[userIndex].append({userFrom: me, date: Qt.formatDateTime(new Date(), "ddd hh:mm:ss"), content: inputMess.text});
+                        sendMessSignal(mateName, inputMess.text);
                         chatView.currentIndex = chatView.count - 1;
                     }
                 }

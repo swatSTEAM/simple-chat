@@ -46,7 +46,7 @@ ListView {
             Text {
                 id: dateText
                 color: _backColor
-                text: user + " " + date
+                text: userFrom + " " + date
                 font.pixelSize: _interval*1.3
                 width: parent.width
 //                        anchors.centerIn: parent
@@ -58,19 +58,6 @@ ListView {
          }
 
     focus: true
-    model: ListModel {
-        id: chatModel
-        ListElement {
-            user: "User1"
-            date: "02:28, Sun"
-            content: "Hi, I'm nothing. Would you like smth? "
-        }
-        ListElement {
-            user: "User1"
-            date: "02:28, Sun"
-            content: "how are you? "
-        }
-
-    }
+    model: chatModel
 }
 

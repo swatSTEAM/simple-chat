@@ -1,6 +1,7 @@
 #include "base_server.hpp"
 
-BaseServer::BaseServer(int port) {
+BaseServer::BaseServer(int port)
+{
     /*!
      * @brief Instantiates server with passed port and invokes service functions
      * @param[in] port - Server port
@@ -13,7 +14,8 @@ BaseServer::BaseServer(int port) {
     server_activate();
 }
 
-void BaseServer::server_init() {
+void BaseServer::server_init()
+{
     /*!
      * @brief Creates server socket.
      * If #allow_reuse_address is true makes socket reusable.
@@ -27,7 +29,8 @@ void BaseServer::server_init() {
         exit(1);
     }
 
-    if (allow_reuse_address) {
+    if (allow_reuse_address)
+    {
         int yes = 1;
         if (setsockopt(master_socket, SOL_SOCKET, SO_REUSEADDR,
                        &yes, sizeof(yes)) == -1)
@@ -40,7 +43,8 @@ void BaseServer::server_init() {
 //    set_nonblock(master_socket);
 }
 
-void BaseServer::server_bind() {
+void BaseServer::server_bind()
+{
     /*!
      * @brief Binds #master_socket with server #port and local address.
      */
@@ -59,19 +63,22 @@ void BaseServer::server_bind() {
     }
 }
 
-void BaseServer::server_activate() {
+void BaseServer::server_activate()
+{
     /*!
      * @brief Makes #master_socket listening.
      */
 
-    if (listen(master_socket, request_queue_size) < 0) {
+    if (listen(master_socket, request_queue_size) < 0)
+    {
         // TODO
         std::cout << strerror(errno) << std::endl;
         exit(1);
     }
 }
 
-std::string BaseServer::get_ip() const {
+std::string BaseServer::get_ip() const
+{
     /*!
      * @brief Returns server IP
      */
@@ -82,11 +89,13 @@ std::string BaseServer::get_ip() const {
     return std::string(buffer);
 }
 
-BaseServer::~BaseServer() {
+BaseServer::~BaseServer()
+{
     stop_server();
 }
 
-int BaseServer::get_port() const {
+int BaseServer::get_port() const
+{
     /*!
      * @brief Returns server #port
      */
@@ -94,19 +103,22 @@ int BaseServer::get_port() const {
     return port;
 }
 
-void BaseServer::stop_server() {
+void BaseServer::stop_server()
+{
     /*!
      * @brief In #BaseServer closes #master_socket.
      */
 
-    if (master_socket != -1) {
+    if (master_socket != -1)
+    {
         shutdown(master_socket, SHUT_RDWR);
         close(master_socket);
         master_socket = -1;
     }
 }
 
-std::string BaseServer::get_address() const {
+std::string BaseServer::get_address() const
+{
     /*!
      * @brief Returns server address in the following form: ip:port
      */
@@ -114,7 +126,8 @@ std::string BaseServer::get_address() const {
     return std::string(get_ip() + ":" + std::to_string(get_port()));
 }
 
-int BaseServer::set_nonblock(sockfd_t sock) {
+int BaseServer::set_nonblock(sockfd_t sock)
+{
     /*!
      * @brief Puts socket in non-blocking mode
      */

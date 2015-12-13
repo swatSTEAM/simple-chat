@@ -3,13 +3,15 @@
 
 ThreadedServer server(8080);
 
-void ctrl_c_handler(int) {
+void ctrl_c_handler(int)
+{
     std::cout << "\nKeyboard interrupt received, exiting..." << std::endl;
     server.stop_server();
     exit(EXIT_SUCCESS);
 }
 
-int main() {
+int main()
+{
 
     std::signal(SIGINT, ctrl_c_handler);
 

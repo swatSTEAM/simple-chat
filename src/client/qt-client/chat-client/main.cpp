@@ -6,20 +6,23 @@
 
 int main(int argc, char *argv[])
 {
+    qRegisterMetaType<QTcpSocket::SocketError>();
+    qRegisterMetaType<std::vector<QString>>();
+//    auto thread = new QThread;
     QApplication app(argc, argv);
 
     QQmlApplicationEngine engine;
+
     ChatCore core;
-    QQmlContext* uiCtx = engine.rootContext();
-    uiCtx->setContextProperty("core", &core);
+    engine.rootContext()->setContextProperty("core", &core);
 
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
-    auto uiCore = engine.rootObjects().takeFirst();
+    auto ui_core = engine.rootObjects().takeFirst();
 
-    QObject::connect(uiCore, SIGNAL(loginSignal(QString, QString, QString)),
-                     &core, SLOT(tryconnect(QString, QString, QString)));
-    QObject::connect(uiCore, SIGNAL(disconnectSignal()),
-                     &core, SLOT(disconnect()));
+    core.add_UI(ui_core);
+//    core.moveToThread(thread);
+
+
 //    QObject::connect(&core, SIGNAL(failed(QString, int)),
 //                     engine.rootObjects().takeFirst(), SLOT(showErr(QString, int)));
 

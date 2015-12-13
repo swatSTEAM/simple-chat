@@ -13,7 +13,8 @@ TEMPLATE = app
 
 SOURCES +=  main.cpp\
             remote_server.cpp \
-    chat_core.cpp
+    chat_core.cpp \
+    worker.cpp
 
 QT += qml quick widgets
 RESOURCES += qml.qrc
@@ -21,6 +22,7 @@ include(deployment.pri)
 
 HEADERS  += \
             remote_server.hpp \
-    chat_core.hpp
+    chat_core.hpp \
+    worker.h
 
 FORMS    +=

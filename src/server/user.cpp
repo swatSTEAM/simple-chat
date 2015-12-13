@@ -6,23 +6,27 @@ User::User(sockfd_t sock, sockaddr_in sock_addr) :
     // TODO
 }
 
-User::~User() {
+User::~User()
+{
     // TODO
 }
 
-void User::close_connection() {
+void User::close_connection()
+{
     /*!
      * @brief Closes #user_socket.
      */
 
-    if (get_nickname() != "") {
+    if (get_nickname() != "")
+    {
         std::cout << get_nickname() << " ";
     }
     std::cout << get_address() << " disconnected" << std::endl;
     close(user_socket);
 }
 
-std::string User::get_ip() const {
+std::string User::get_ip() const
+{
     /*!
      * @brief Returns user's ip.
      */
@@ -32,7 +36,8 @@ std::string User::get_ip() const {
     return std::string(buffer);
 }
 
-int User::get_port() const {
+int User::get_port() const
+{
     /*!
      * @brief Returns user's port.
      */
@@ -40,7 +45,8 @@ int User::get_port() const {
     return user_socket_addr.sin_port;
 }
 
-std::string User::get_address() const {
+std::string User::get_address() const
+{
     /*!
      * @brief Returns user's address if the follow form: ip:port .
      */
@@ -48,7 +54,8 @@ std::string User::get_address() const {
     return get_ip() + ":" + std::to_string(get_port());
 }
 
-ssize_t User::send_message(const std::string msg_string) const {
+ssize_t User::send_message(const std::string msg_string) const
+{
     /*!
      * @brief Sends string to user.
      * @param[in] msg_string - Source string.
@@ -56,10 +63,11 @@ ssize_t User::send_message(const std::string msg_string) const {
      * On error, -1
      */
 
-    return send(user_socket, msg_string.c_str(), msg_string.size(), MSG_NOSIGNAL);
+    return send(user_socket, msg_string.c_str(), msg_string.size()+1, MSG_NOSIGNAL);
 }
 
-ssize_t User::read_message() {
+ssize_t User::read_message()
+{
     /*!
      * @brief Read String from user.
      * @param[out] number - On success, returns the number of characters recieved.
@@ -68,13 +76,15 @@ ssize_t User::read_message() {
 
     ssize_t chars_recvd = recv(user_socket, inner_buffer.data(),
                                buffer_size - 1, MSG_NOSIGNAL);
-    if (chars_recvd > -1) {
+    if (chars_recvd > -1)
+    {
         inner_buffer[chars_recvd] = '\0';
     }
     return chars_recvd;
 }
 
-std::string User::get_message() const {
+std::string User::get_message() const
+{
     /*!
      * @brief Returns string that was made from #inner_buffer.
      */
@@ -82,7 +92,8 @@ std::string User::get_message() const {
     return std::string(inner_buffer.data());
 }
 
-bool User::operator<(const User &rhs) const {
+bool User::operator<(const User &rhs) const
+{
     /*!
      * @brief Compares two users. Using for storing in std::set.
      */
@@ -90,7 +101,8 @@ bool User::operator<(const User &rhs) const {
     return this->get_nickname() < rhs.get_nickname();
 }
 
-void User::set_nickname(std::string nickname) {
+void User::set_nickname(std::string nickname)
+{
     /*!
      * @brief Sets nickname to user.
      */
@@ -98,7 +110,8 @@ void User::set_nickname(std::string nickname) {
     this->nickname = nickname;
 }
 
-std::string User::get_nickname() const {
+std::string User::get_nickname() const
+{
     /*!
      * @brief Returns user nickname.
      */
@@ -106,7 +119,8 @@ std::string User::get_nickname() const {
     return nickname;
 }
 
-void User::set_roommate(user_ptr target) {
+void User::set_roommate(user_ptr target)
+{
     /*!
      * @brief Sets roommate for user.
      */
@@ -114,7 +128,8 @@ void User::set_roommate(user_ptr target) {
     rommate = target;
 }
 
-void User::detach_roommate() {
+void User::detach_roommate()
+{
     /*!
      * @brief Detaches current user's roommate.
      */
@@ -122,7 +137,8 @@ void User::detach_roommate() {
     rommate = nullptr;
 }
 
-bool User::has_roomate() const {
+bool User::has_roomate() const
+{
     /*!
      * @brief Checks does the user have a roommate.
      */
@@ -130,7 +146,8 @@ bool User::has_roomate() const {
     return rommate != nullptr;
 }
 
-ssize_t User::send_to_roommate(std::string msg) {
+ssize_t User::send_to_roommate(std::string msg)
+{
     /*!
      * @brief Sends message to user's roommate.
      * @param[out] number - On success, returns the number of characters sent.

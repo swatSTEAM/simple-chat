@@ -26,7 +26,8 @@ typedef int sockfd_t;
 	@brief Represents users that connecting to the server.
 */
 
-class User {
+class User
+{
 
 public:
     static constexpr size_t buffer_size = 4096;

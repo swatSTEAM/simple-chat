@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <cerrno>
+#include <cstring>
 
 #include <strings.h>
 #include <arpa/inet.h>
@@ -19,7 +20,8 @@ typedef int sockfd_t;
 	@brief Base abstract TCP server class.
 */
 
-class BaseServer {
+class BaseServer
+{
 
 public:
     explicit BaseServer(int port);

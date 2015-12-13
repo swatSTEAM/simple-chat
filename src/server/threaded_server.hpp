@@ -6,21 +6,16 @@
 #include <set>
 #include <thread>
 
-#include "../rapidjson/document.h"
-#include "../rapidjson/stringbuffer.h"
-#include "../rapidjson/writer.h"
-#include "../rapidjson/pointer.h"
-
 #include "base_server.hpp"
 #include "user.hpp"
-#include "server_api.hpp"
+#include "api.hpp"
 
 /*!
 	@brief Main server which handles client's requests in different threads.
 */
 
-class ThreadedServer : public BaseServer {
-
+class ThreadedServer : public BaseServer
+{
 public:
     ThreadedServer() = delete;
     ~ThreadedServer() override;
@@ -35,6 +30,7 @@ private:
     std::mutex mutex;
 
     void handle_request(User::user_ptr);
+    void send_to_all_users(std::string);
     bool authorize(User::user_ptr) const;
     User::user_ptr search_by_nickname(std::string) const;
     std::string online_users() const;

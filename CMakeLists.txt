@@ -10,6 +10,5 @@ set(SOURCE_FILES src/server/main.cpp
         src/server/threaded_server.cpp
         src/server/threaded_server.hpp
         src/server/user.cpp
-        src/server/user.hpp
-        src/server/server_api.hpp)
+        src/server/user.hpp src/server/api.cpp src/server/api.hpp)
 add_executable(server ${SOURCE_FILES})

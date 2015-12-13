@@ -4,37 +4,46 @@
 #include <iostream>
 #include <string>
 #include <memory>
+#include <queue>
 
 #include <QDebug>
 #include <QMessageBox>
 #include <QTcpSocket>
 
-class Server : public QObject {
+class MainWindow;
+
+class Server : public QObject
+{
     Q_OBJECT
 public:
-
     Server() = delete;
-    Server(std::string, std::string, int);
-    ~Server();
     Server(const Server&) = delete;
+    Server(std::string, std::string, int, QWidget *parent = nullptr);
+    ~Server();
 
-    void disconnect();
+    void destroy_connection();
     QString get_address();
-
+    QTcpSocket *get_socket();
+    QString get_nickname();
+    qint64 send(QString);
+    QString read();
 private slots:
     void establish_connection();
 
 signals:
     void connected();
     void readyRead();
-    void error();
+    void error(QAbstractSocket::SocketError);
     void stop_thread();
+    void slotDisconnected();
+
 private:
     std::string nickname;
     std::string ip;
     int port;
     const int timeout = 5;
-    std::unique_ptr<QTcpSocket> master_socket = nullptr;
+    QTcpSocket *master_socket = nullptr;
+
 };
 
 #endif // SERVER_HPP

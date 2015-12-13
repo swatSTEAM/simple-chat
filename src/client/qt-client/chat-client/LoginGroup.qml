@@ -25,13 +25,13 @@ Item {
             font.pixelSize: _buttonSize*(3/4)-3
             maximumLength: 20
             selectByMouse: true
+            text: "52.29.117.31"
             placeholderText: "IP"
-            validator:RegExpValidator
+            validator: RegExpValidator
             {
-                regExp:/^(([01]?[0-9]?[0-9]|2([0-4][0-9]|5[0-5]))\.){3}([01]?[0-9]?[0-9]|2([0-4][0-9]|5[0-5]))$/
+                regExp: /^(([01]?[0-9]?[0-9]|2([0-4][0-9]|5[0-5]))\.){3}([01]?[0-9]?[0-9]|2([0-4][0-9]|5[0-5]))$/
             }
 
-//            inputMask:  "000.000.000.000"
             style: TextFieldStyle {
                 textColor: _backColor
                 selectionColor: _backColor
@@ -41,7 +41,17 @@ Item {
                     border.color: _backColor
                 }
             }
+
+            Keys.onPressed: {
+               if (event.key == Qt.Key_Enter || event.key == "16777220") {
+                   connect();
+                   event.accepted = true;
+               }
+            }
+            Keys.enabled: go.visible && go.enabled
+
         }
+
         TextField {
             x: ipInput.width+_interval
             width: parent.width-x
@@ -51,12 +61,11 @@ Item {
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             font.pixelSize: _buttonSize*(3/4)-3
-            maximumLength: 4
+            maximumLength: 5
             selectByMouse: true
             placeholderText: "Port"
             validator: IntValidator {bottom: 1; top: 65535;}
-
-
+            text: "8080"
             style: TextFieldStyle {
                 textColor: _backColor
                 selectionColor: _backColor
@@ -66,6 +75,15 @@ Item {
                     border.color: _backColor
                 }
             }
+
+            Keys.onPressed: {
+               if (event.key == Qt.Key_Enter || event.key == "16777220") {
+                   connect();
+                   event.accepted = true;
+               }
+            }
+            Keys.enabled: go.visible && go.enabled
+
         }
     }
 
@@ -81,6 +99,15 @@ Item {
         maximumLength: 20
         selectByMouse: true
         placeholderText: "Nickname"
+
+        Keys.onPressed: {
+           if (event.key == Qt.Key_Enter || event.key == "16777220") {
+               connect();
+               event.accepted = true;
+           }
+        }
+        Keys.enabled: go.visible && go.enabled
+
         style: TextFieldStyle {
             textColor: _backColor
             selectionColor: _backColor
@@ -104,17 +131,18 @@ Item {
         timer.start();
     }
 
+
+    function connect() {
+
+        loginSignal(nickInput.text, ipInput.text, portInput.text)
+
+        loginGroup.visible = false
+        headText.text = "Loading..."
+        animateOpacity.start();
+        me = nickInput.text;
+    }
+
     SweetButt {
-        function connect() {
-
-            loginSignal(nickInput.text, ipInput.text, portInput.text)
-
-            loginGroup.visible = false
-            headText.text = "Loading..."
-            animateOpacity.start();
-            me = nickInput.text;
-        }
-
         enabled: ipInput.acceptableInput && portInput.acceptableInput && /\S/.test(nickInput.text)
         id: go
         anchors.horizontalCenter: parent.horizontalCenter
@@ -123,15 +151,6 @@ Item {
         height: _buttonSize
         text: "GO"
         onClicked: connect()
-//        action: goAction
-//        Action {
-//            id: goAction
-//            shortcut: "Enter"
-//            enabled: go.enabled && go.visible
-//            onTriggered: {
-
-//            }
-//        }
     }
 
 }
