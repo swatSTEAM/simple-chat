@@ -2,7 +2,6 @@ src/client/qt-client/*
 !src/client/qt-client/chat-client/
 a.out
 client.cpp
-server
 
 # C/C++ BELOW:
 # Compiled Object files

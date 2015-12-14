@@ -1,21 +1,17 @@
 #include "threaded_server.hpp"
 
-using std::strcmp;
-
 ThreadedServer::ThreadedServer(int port) :
         BaseServer::BaseServer(port)
 {
-    //TODO
+
 }
 
 ThreadedServer::~ThreadedServer()
 {
-    // TODO
 }
 
 void ThreadedServer::stop_server()
 {
-    // TODO
     BaseServer::stop_server();
 }
 
@@ -24,8 +20,8 @@ void ThreadedServer::serve_forever()
     /*!
      * @brief Main server loop.
      *
-     * In endless loop the #master_socket tries to accept new connections. If accept is OK,
-     * creates new user and handles him in separate deamon threads.
+     * In endless loop the #master_socket tries to accept new connections.
+     * If accept is OK, creates new user and handles him in separate deamon threads.
      */
 
     struct sockaddr_in client_addr;
@@ -37,7 +33,7 @@ void ThreadedServer::serve_forever()
         {
             // TODO
             std::cout << strerror(errno) << std::endl;
-            exit(1);
+            continue;
         }
         std::cout << "new connection" << std::endl;
         User::user_ptr new_user = std::make_shared<User>(client_sock, client_addr);
@@ -53,48 +49,49 @@ void ThreadedServer::handle_request(User::user_ptr user)
      * @param[in] user - connected user.
      *
      * Initially server tries to authorize the user. If authorization is OK,
-     * user will be added in the set. Next, while connection is alive getting
-     * data from user. When user disconnects, pulls it out from the set and
-     * closes connection.
+     * user will be added in the set. Also, we notify online users about new
+     * incomer. While connection is alive getting requests from user and
+     * handling them in appropriate if-else branch. When user disconnects,
+     * pull it out from the set, notify online users about disconnection.
      */
 
     using namespace rapidjson;
     if (!authorize(user))
     {
+        /// if #user doesn't passed authorization than disconnect him
         user->close_connection();
-        ///< if #user doesn't passed authorization than disconnect him
         return;
     }
 
-    user->set_nickname(user->get_message());
+    user->set_nickname(user->last_message());
 
     std::cout << user->get_nickname() << " " <<
             user->get_address() << " connected" << std::endl;
 
+    /// Notifying online users about new incomer
     send_to_all_users(
             api::user_connected(user->get_nickname())
                      );
-    ///< Notifying online users about new incomer
 
     mutex.lock();
         users.insert(user);
     mutex.unlock();
 
+    /// Send to incomer all current online users
     user->send_message(online_users());
-    ///< Send to incomer all current online users
 
-    /// @todo All things below were made for testing and should be reimplemented!
     while (user->read_message() > 0)
     {
-        std::cout << user->get_message() << std::endl;
+        std::cout << user->get_nickname() << " : " <<
+                user->last_message() << std::endl;
+        /// Print in server chat all users requests
 
         Document json;
-        json.Parse(user->get_message().c_str());
+        json.Parse(user->last_message().c_str());
 
         if (json.IsObject() && json.HasMember("method"))
         {
             std::string method = json["method"].GetString();
-            ///< Next checking method and invoking appropriate handler
 
             if (method == api::get_online_users)
             {
@@ -102,71 +99,43 @@ void ThreadedServer::handle_request(User::user_ptr user)
                 continue;
             }
 
-            if (method == api::create_room && json.HasMember("roommate"))
+            if (method == api::send_to_user && json.HasMember("user") &&
+                    json.HasMember("msg"))
             {
-                auto roommate = search_by_nickname(json["roommate"].GetString());
+                auto receiver_nickname = json["user"].GetString();
+                auto msg = json["msg"].GetString();
 
-                if (roommate != nullptr)
+                User::user_ptr receiver_ptr = nullptr;
+                if ((receiver_ptr = search_by_nickname(receiver_nickname)) != nullptr)
                 {
-                    user->set_roommate(roommate);
-                    user->send_message(api::room_created("succsess", roommate->get_nickname()));
-                } else {
-                    user->send_message(api::room_created("failed", "null"));
-                }
-                continue;
-            }
-
-            if (method == api::send_to_roommate)
-            {
-                if (user->has_roomate() && json.HasMember("msg"))
+                    receiver_ptr->send_message(
+                            api::msg_from_user(user->get_nickname(), msg)
+                                              );
+                } else
                 {
-                    user->send_to_roommate(json["msg"].GetString());
+                    user->send_message(
+                            api::msg_delivery_error(receiver_nickname, msg)
+                                      );
                 }
-                continue;
-                // @TODO handle errors
             }
-
-            if (method == api::send_to_user)
-            {
-                if (json.HasMember("user") && json.HasMember("msg"))
-                {
-                    auto receiver = json["user"].GetString();
-                    auto msg = json["msg"].GetString();
-                    User::user_ptr receiver_ptr = nullptr;
-                    if ((receiver_ptr = search_by_nickname(receiver)) != nullptr)
-                    {
-                        receiver_ptr->send_message(
-                                api::msg_from_user(user->get_nickname(), msg)
-                                                  );
-                    } else {
-                        user->send_message("Ne dostavleno))0");
-                    }
-                }
-                continue;
-                //if (search_by_nickname())
-            }
-
-            //
-            //if (strcmp(method, API::METHODS::DESTROY_ROOM) == 0)
-            //{
-            //    if (user->has_roomate())
-            //    {
-            //        user->detach_roommate();
-            //    }
-            //    continue;
-            //}
+        } else
+        {
+            user->send_message(
+                    api::api_error(user->last_message()));
         }
-        user->send_message(
-                api::api_error(user->get_message()));
     }
 
+    /// On this stage user is unaccesable
     mutex.lock();
         users.erase(user);
     mutex.unlock();
 
+    /// Notifying online users about disconnection
     send_to_all_users(
             api::user_disconnected(user->get_nickname())
                      );
+
+    /// Close user socket
     user->close_connection();
 }
 
@@ -182,7 +151,7 @@ bool ThreadedServer::authorize(User::user_ptr user) const
      */
 
     user->read_message();
-    auto nickname = user->get_message();
+    auto nickname = user->last_message();
     if (!search_by_nickname(nickname))
     {
         user->send_message(api::authorized("succsess"));
@@ -225,7 +194,8 @@ std::string ThreadedServer::online_users() const
 
     for (const auto& user : users)
     {
-        SetValueByPointer(response, "/online_users/-", user->get_nickname().c_str());
+        SetValueByPointer(response, "/online_users/-",
+                          user->get_nickname().c_str());
     }
 
     StringBuffer buffer;
@@ -238,6 +208,11 @@ std::string ThreadedServer::online_users() const
 
 void ThreadedServer::send_to_all_users(std::string msg)
 {
+    /*!
+     * @brief Sends message to all online users
+     * @param[in] msg - message
+     */
+
     for (const auto& user : users)
     {
         user->send_message(msg);

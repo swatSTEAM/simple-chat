@@ -12,7 +12,6 @@ void ctrl_c_handler(int)
 
 int main()
 {
-
     std::signal(SIGINT, ctrl_c_handler);
 
     std::cout << "Serving HTTP on " << server.get_address() << "\n";

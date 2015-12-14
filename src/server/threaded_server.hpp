@@ -24,8 +24,7 @@ public:
     void serve_forever() override;
     void stop_server() override;
 private:
-    std::set<User::user_ptr> users;
-    ///< All online users stores in std::set. Users are compared by nicknames.
+    std::set<User::user_ptr> users; ///< All online users stores in std::set. Users are compared by nicknames.
 
     std::mutex mutex;
 

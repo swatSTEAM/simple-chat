@@ -10,5 +10,6 @@
         <file>resource/fontawesome-webfont.ttf</file>
         <file>controls/Loader.qml</file>
         <file>BarButt.qml</file>
+        <file>ding.wav</file>
     </qresource>
 </RCC>

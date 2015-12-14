@@ -5,6 +5,7 @@ import QtQuick.Controls.Styles 1.4
 import "controls" as Awesome
 import QtQuick.Window 2.2
 import QtGraphicalEffects 1.0
+import QtMultimedia 5.5
 
 ApplicationWindow {
 
@@ -79,6 +80,7 @@ ApplicationWindow {
             }
         }
         onNewMess: {
+            playMusic.play();
             for(var i = 0; i < userModel.count; i++) {
                 if (userModel.get(i).name == user) {
                     usersData[i].append({userFrom: user, date: Qt.formatDateTime(new Date(), "ddd hh:mm:ss"), content: mess});
@@ -87,6 +89,8 @@ ApplicationWindow {
                         warns.text = "New message from " + user;
                         lastWarnUser = user;
                         animateColor.start();
+                    } else {
+                        chatView.currentIndex = chatView.count - 1;
                     }
                     break;
                 }
@@ -103,6 +107,10 @@ ApplicationWindow {
         loginGroup.visible = true;
     }
 
+    SoundEffect {
+        id: playMusic
+        source: "qrc:/ding.wav"
+    }
 
     Timer {
         id: timer
@@ -239,6 +247,7 @@ ApplicationWindow {
                                         userIndex = i;
                                         chatView.model = usersData[userIndex];
                                         console.log("SELECT MATE: " + mateName);
+                                        chatView.currentIndex = chatView.count - 1;
                                         break;
                                     }
                                 }

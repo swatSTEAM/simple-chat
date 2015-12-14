@@ -47,8 +47,7 @@ protected:
     sockaddr_in socket_address;
 
 
-    static constexpr size_t BUFFER_SIZE = 4096;
-    ///< Length of bytes that #master_socket accepts at a time.
+    static constexpr size_t BUFFER_SIZE = 4096; ///< Length of bytes that #master_socket accepts at a time.
 
     virtual void server_init();
     virtual void server_bind();

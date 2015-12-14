@@ -83,7 +83,7 @@ ssize_t User::read_message()
     return chars_recvd;
 }
 
-std::string User::get_message() const
+std::string User::last_message() const
 {
     /*!
      * @brief Returns string that was made from #inner_buffer.

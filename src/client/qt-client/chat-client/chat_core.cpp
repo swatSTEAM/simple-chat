@@ -96,6 +96,7 @@ void ChatCore::disconnect()
         return;
 
     server->destroy_connection();
+    delete server;
     server = nullptr;
     if (worker != nullptr)
         worker->abort();
